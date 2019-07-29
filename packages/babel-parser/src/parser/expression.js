@@ -1035,6 +1035,19 @@ export default class ExpressionParser extends LValParser {
       case tt.parenL:
         return this.parseParenAndDistinguishExpression(canBeArrow);
 
+      case tt.bracketBarL:
+      case tt.bracketHashL: {
+        const oldInFSharpPipelineDirectBody = this.state
+          .inFSharpPipelineDirectBody;
+        const close =
+          this.state.type === tt.bracketBarL ? tt.bracketBarR : tt.bracketR;
+        this.state.inFSharpPipelineDirectBody = false;
+        node = this.startNode();
+        this.next();
+        node.elements = this.parseExprList(close, true, refShorthandDefaultPos);
+        this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
+        return this.finishNode(node, "TupleExpression");
+      }
       case tt.bracketL: {
         const oldInFSharpPipelineDirectBody = this.state
           .inFSharpPipelineDirectBody;
@@ -1058,11 +1071,27 @@ export default class ExpressionParser extends LValParser {
         this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
         return this.finishNode(node, "ArrayExpression");
       }
+      case tt.braceBarL:
+      case tt.braceHashL: {
+        const oldInFSharpPipelineDirectBody = this.state
+          .inFSharpPipelineDirectBody;
+        const close =
+          this.state.type === tt.braceBarL ? tt.braceBarR : tt.braceR;
+        this.state.inFSharpPipelineDirectBody = false;
+        const ret = this.parseObj(close, false, true, refShorthandDefaultPos);
+        this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
+        return ret;
+      }
       case tt.braceL: {
         const oldInFSharpPipelineDirectBody = this.state
           .inFSharpPipelineDirectBody;
         this.state.inFSharpPipelineDirectBody = false;
-        const ret = this.parseObj(false, refShorthandDefaultPos);
+        const ret = this.parseObj(
+          tt.braceR,
+          false,
+          false,
+          refShorthandDefaultPos,
+        );
         this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
         return ret;
       }
@@ -1490,10 +1519,12 @@ export default class ExpressionParser extends LValParser {
     return this.finishNode(node, "TemplateLiteral");
   }
 
-  // Parse an object literal or binding pattern.
+  // Parse an object literal, binding pattern, or record.
 
   parseObj<T: N.ObjectPattern | N.ObjectExpression>(
+    close: TokenType,
     isPattern: boolean,
+    isRecord: boolean,
     refShorthandDefaultPos?: ?Pos,
   ): T {
     const propHash: any = Object.create(null);
@@ -1503,19 +1534,23 @@ export default class ExpressionParser extends LValParser {
     node.properties = [];
     this.next();
 
-    while (!this.eat(tt.braceR)) {
+    while (!this.eat(close)) {
       if (first) {
         first = false;
       } else {
         this.expect(tt.comma);
-        if (this.match(tt.braceR)) {
+        if (this.match(close)) {
           this.addExtra(node, "trailingComma", this.state.lastTokStart);
           this.next();
           break;
         }
       }
 
-      const prop = this.parseObjectMember(isPattern, refShorthandDefaultPos);
+      const prop = this.parseObjectMember(
+        isPattern,
+        isRecord,
+        refShorthandDefaultPos,
+      );
       // $FlowIgnore RestElement will never be returned if !isPattern
       if (!isPattern) this.checkDuplicatedProto(prop, propHash);
 
@@ -1531,10 +1566,13 @@ export default class ExpressionParser extends LValParser {
       this.raise(propHash.start, "Redefinition of __proto__ property");
     }
 
-    return this.finishNode(
-      node,
-      isPattern ? "ObjectPattern" : "ObjectExpression",
-    );
+    let type = "ObjectExpression";
+    if (isPattern) {
+      type = "ObjectPattern";
+    } else if (isRecord) {
+      type = "RecordExpression";
+    }
+    return this.finishNode(node, type);
   }
 
   isAsyncProp(prop: N.ObjectProperty): boolean {
@@ -1554,10 +1592,15 @@ export default class ExpressionParser extends LValParser {
 
   parseObjectMember(
     isPattern: boolean,
+    isRecord: boolean,
     refShorthandDefaultPos: ?Pos,
   ): N.ObjectMember | N.SpreadElement | N.RestElement {
     let decorators = [];
     if (this.match(tt.at)) {
+      if (isRecord) {
+        this.raise(this.state.start, "A record member cannot be decorated");
+      }
+
       if (this.hasPlugin("decorators")) {
         this.raise(
           this.state.start,
@@ -1625,6 +1668,7 @@ export default class ExpressionParser extends LValParser {
       isGenerator,
       isAsync,
       isPattern,
+      isRecord,
       refShorthandDefaultPos,
       containsEsc,
     );
@@ -1719,6 +1763,7 @@ export default class ExpressionParser extends LValParser {
     startPos: ?number,
     startLoc: ?Position,
     isPattern: boolean,
+    isRecord: boolean,
     refShorthandDefaultPos: ?Pos,
   ): ?N.ObjectProperty {
     prop.shorthand = false;
@@ -1765,24 +1810,31 @@ export default class ExpressionParser extends LValParser {
     isGenerator: boolean,
     isAsync: boolean,
     isPattern: boolean,
+    isRecord: boolean,
     refShorthandDefaultPos: ?Pos,
     containsEsc: boolean,
   ): void {
-    const node =
-      this.parseObjectMethod(
+    let node = null;
+    if (!isRecord) {
+      node = this.parseObjectMethod(
         prop,
         isGenerator,
         isAsync,
         isPattern,
         containsEsc,
-      ) ||
-      this.parseObjectProperty(
+      );
+    }
+
+    if (!node) {
+      node = this.parseObjectProperty(
         prop,
         startPos,
         startLoc,
         isPattern,
+        isRecord,
         refShorthandDefaultPos,
       );
+    }
 
     if (!node) this.unexpected();
 

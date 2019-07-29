@@ -2,6 +2,7 @@
 import defineType, {
   assertEach,
   assertNodeType,
+  assertNodeOrValueType,
   assertValueType,
   chain,
 } from "./utils";
@@ -268,4 +269,33 @@ defineType("BigIntLiteral", {
     },
   },
   aliases: ["Expression", "Pureish", "Literal", "Immutable"],
+});
+
+defineType("RecordExpression", {
+  visitor: ["properties"],
+  aliases: ["Expression"],
+  fields: {
+    properties: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(assertNodeType("ObjectProperty", "SpreadElement")),
+      ),
+    },
+  },
+});
+
+defineType("TupleExpression", {
+  fields: {
+    elements: {
+      validate: chain(
+        assertValueType("array"),
+        assertEach(
+          assertNodeOrValueType("null", "Expression", "SpreadElement"),
+        ),
+      ),
+      default: [],
+    },
+  },
+  visitor: ["elements"],
+  aliases: ["Expression"],
 });

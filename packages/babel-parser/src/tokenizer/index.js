@@ -391,6 +391,18 @@ export default class Tokenizer extends LocationParser {
     }
 
     if (
+      this.getPluginOption("recordAndTuple", "hash") &&
+      (next === 123 || next === 91)
+    ) {
+      if (next === 123) {
+        // #{
+        this.finishToken(tt.braceHashL);
+      } else {
+        // #[
+        this.finishToken(tt.bracketHashL);
+      }
+      this.state.pos += 2;
+    } else if (
       (this.hasPlugin("classPrivateProperties") ||
         this.hasPlugin("classPrivateMethods")) &&
       this.state.classLevel > 0
@@ -504,6 +516,23 @@ export default class Tokenizer extends LocationParser {
       // '|>'
       if (next === charCodes.greaterThan) {
         this.finishOp(tt.pipeline, 2);
+        return;
+      }
+      // '|}'
+      if (
+        this.getPluginOption("recordAndTuple", "bar") &&
+        next === charCodes.rightCurlyBrace
+      ) {
+        this.finishOp(tt.braceBarR, 2);
+        return;
+      }
+
+      // '|]'
+      if (
+        this.getPluginOption("recordAndTuple", "bar") &&
+        next === charCodes.rightSquareBracket
+      ) {
+        this.finishOp(tt.bracketBarR, 2);
         return;
       }
     }
@@ -674,16 +703,34 @@ export default class Tokenizer extends LocationParser {
         this.finishToken(tt.comma);
         return;
       case charCodes.leftSquareBracket:
-        ++this.state.pos;
-        this.finishToken(tt.bracketL);
+        if (
+          this.getPluginOption("recordAndTuple", "bar") &&
+          this.input.charCodeAt(this.state.pos + 1) === charCodes.verticalBar
+        ) {
+          // [|
+          this.finishToken(tt.bracketBarL);
+          this.state.pos += 2;
+        } else {
+          ++this.state.pos;
+          this.finishToken(tt.bracketL);
+        }
         return;
       case charCodes.rightSquareBracket:
         ++this.state.pos;
         this.finishToken(tt.bracketR);
         return;
       case charCodes.leftCurlyBrace:
-        ++this.state.pos;
-        this.finishToken(tt.braceL);
+        if (
+          this.getPluginOption("recordAndTuple", "bar") &&
+          this.input.charCodeAt(this.state.pos + 1) === charCodes.verticalBar
+        ) {
+          // {|
+          this.finishToken(tt.braceBarL);
+          this.state.pos += 2;
+        } else {
+          ++this.state.pos;
+          this.finishToken(tt.braceL);
+        }
         return;
       case charCodes.rightCurlyBrace:
         ++this.state.pos;

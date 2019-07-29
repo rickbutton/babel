@@ -84,6 +84,19 @@ export function validatePlugins(plugins: PluginList) {
         PIPELINE_PROPOSALS.map(p => `'${p}'`).join(", "),
     );
   }
+
+  const recordAndTupleHash =
+    getPluginOption(plugins, "recordAndTuple", "hash") === true;
+  const recordAndTupleBar =
+    getPluginOption(plugins, "recordAndTuple", "bar") === true;
+  if (
+    hasPlugin(plugins, "recordAndTuple") &&
+    recordAndTupleHash === recordAndTupleBar
+  ) {
+    throw new Error(
+      "'recordAndTuple' requires one of 'hash' or 'bar' to be set to true.",
+    );
+  }
 }
 
 // These plugins are defined using a mixin which extends the parser class.
