@@ -380,7 +380,16 @@ export default class Tokenizer extends LocationParser {
       this.raise(this.state.pos, "Unexpected digit after hash token");
     }
 
-    if (
+    if (this.hasPlugin("constantValueTypes") && (next === 123 || next === 91)) {
+      if (next === 123) {
+        // #{
+        this.finishToken(tt.braceHashL);
+      } else {
+        // #[
+        this.finishToken(tt.bracketHashL);
+      }
+      this.state.pos += 2;
+    } else if (
       (this.hasPlugin("classPrivateProperties") ||
         this.hasPlugin("classPrivateMethods")) &&
       this.state.classLevel > 0

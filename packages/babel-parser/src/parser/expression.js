@@ -981,6 +981,20 @@ export default class ExpressionParser extends LValParser {
       case tt.parenL:
         return this.parseParenAndDistinguishExpression(canBeArrow);
 
+      case tt.bracketHashL: {
+        const oldInFSharpPipelineDirectBody = this.state
+          .inFSharpPipelineDirectBody;
+        this.state.inFSharpPipelineDirectBody = false;
+        node = this.startNode();
+        this.next();
+        node.elements = this.parseExprList(
+          tt.bracketR,
+          true,
+          refShorthandDefaultPos,
+        );
+        this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
+        return this.finishNode(node, "TupleExpression");
+      }
       case tt.bracketL: {
         const oldInFSharpPipelineDirectBody = this.state
           .inFSharpPipelineDirectBody;
@@ -1003,11 +1017,19 @@ export default class ExpressionParser extends LValParser {
         this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
         return this.finishNode(node, "ArrayExpression");
       }
+      case tt.braceHashL: {
+        const oldInFSharpPipelineDirectBody = this.state
+          .inFSharpPipelineDirectBody;
+        this.state.inFSharpPipelineDirectBody = false;
+        const ret = this.parseObj(false, true, refShorthandDefaultPos);
+        this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
+        return ret;
+      }
       case tt.braceL: {
         const oldInFSharpPipelineDirectBody = this.state
           .inFSharpPipelineDirectBody;
         this.state.inFSharpPipelineDirectBody = false;
-        const ret = this.parseObj(false, refShorthandDefaultPos);
+        const ret = this.parseObj(false, false, refShorthandDefaultPos);
         this.state.inFSharpPipelineDirectBody = oldInFSharpPipelineDirectBody;
         return ret;
       }
@@ -1435,6 +1457,7 @@ export default class ExpressionParser extends LValParser {
 
   parseObj<T: N.ObjectPattern | N.ObjectExpression>(
     isPattern: boolean,
+    isConstant: boolean,
     refShorthandDefaultPos?: ?Pos,
   ): T {
     const propHash: any = Object.create(null);
@@ -1443,6 +1466,13 @@ export default class ExpressionParser extends LValParser {
 
     node.properties = [];
     this.next();
+
+    if (isPattern && isConstant) {
+      this.raise(
+        this.state.start,
+        "An ObjectPattern cannot be a RecordExpression",
+      );
+    }
 
     while (!this.eat(tt.braceR)) {
       if (first) {
@@ -1464,10 +1494,16 @@ export default class ExpressionParser extends LValParser {
       node.properties.push(prop);
     }
 
-    return this.finishNode(
-      node,
-      isPattern ? "ObjectPattern" : "ObjectExpression",
-    );
+    let type;
+    if (isPattern) {
+      type = "ObjectPattern";
+    } else if (isConstant) {
+      type = "RecordExpression";
+    } else {
+      type = "ObjectExpression";
+    }
+
+    return this.finishNode(node, type);
   }
 
   isAsyncProp(prop: N.ObjectProperty): boolean {

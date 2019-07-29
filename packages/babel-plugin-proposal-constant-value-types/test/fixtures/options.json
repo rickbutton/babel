@@ -1,0 +1,3 @@
+{
+  "plugins": ["proposal-constant-value-types"]
+}
