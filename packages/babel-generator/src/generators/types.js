@@ -109,7 +109,11 @@ export { ArrayExpression as ArrayPattern };
 export function RecordExpression(node: Object) {
   const props = node.properties;
 
-  this.token("#{");
+  if (node.syntaxType === "bar") {
+    this.token("{|");
+  } else {
+    this.token("#{");
+  }
   this.printInnerComments(node);
 
   if (props.length) {
@@ -118,14 +122,22 @@ export function RecordExpression(node: Object) {
     this.space();
   }
 
-  this.token("}");
+  if (node.syntaxType === "bar") {
+    this.token("|}");
+  } else {
+    this.token("}");
+  }
 }
 
 export function TupleExpression(node: Object) {
   const elems = node.elements;
   const len = elems.length;
 
-  this.token("#[");
+  if (node.syntaxType === "bar") {
+    this.token("[|");
+  } else {
+    this.token("#[");
+  }
   this.printInnerComments(node);
 
   for (let i = 0; i < elems.length; i++) {
@@ -137,7 +149,11 @@ export function TupleExpression(node: Object) {
     }
   }
 
-  this.token("]");
+  if (node.syntaxType === "bar") {
+    this.token("|]");
+  } else {
+    this.token("]");
+  }
 }
 
 export function RegExpLiteral(node: Object) {

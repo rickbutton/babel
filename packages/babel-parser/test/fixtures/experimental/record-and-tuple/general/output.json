@@ -89,7 +89,8 @@
                   "column": 14
                 }
               },
-              "properties": []
+              "properties": [],
+              "syntaxType": "hash"
             }
           }
         ],
@@ -339,7 +340,8 @@
                     "value": 3
                   }
                 }
-              ]
+              ],
+              "syntaxType": "hash"
             }
           }
         ],
@@ -568,13 +570,15 @@
                     ],
                     "extra": {
                       "trailingComma": 103
-                    }
+                    },
+                    "syntaxType": "hash"
                   }
                 }
               ],
               "extra": {
                 "trailingComma": 108
-              }
+              },
+              "syntaxType": "hash"
             }
           }
         ],
@@ -640,7 +644,8 @@
                   "column": 14
                 }
               },
-              "elements": []
+              "elements": [],
+              "syntaxType": "hash"
             }
           }
         ],
@@ -767,7 +772,8 @@
                   },
                   "value": 3
                 }
-              ]
+              ],
+              "syntaxType": "hash"
             }
           }
         ],
@@ -909,7 +915,8 @@
                       },
                       "value": 3
                     }
-                  ]
+                  ],
+                  "syntaxType": "hash"
                 },
                 {
                   "type": "NumericLiteral",
@@ -931,7 +938,8 @@
                   },
                   "value": 4
                 }
-              ]
+              ],
+              "syntaxType": "hash"
             }
           }
         ],
@@ -1015,7 +1023,8 @@
                   "column": 15
                 }
               },
-              "properties": []
+              "properties": [],
+              "syntaxType": "hash"
             }
           }
         ],
@@ -1265,7 +1274,8 @@
                     "value": 3
                   }
                 }
-              ]
+              ],
+              "syntaxType": "hash"
             }
           }
         ],
@@ -1494,13 +1504,15 @@
                     ],
                     "extra": {
                       "trailingComma": 287
-                    }
+                    },
+                    "syntaxType": "hash"
                   }
                 }
               ],
               "extra": {
                 "trailingComma": 293
-              }
+              },
+              "syntaxType": "hash"
             }
           }
         ],
@@ -1566,7 +1578,8 @@
                   "column": 15
                 }
               },
-              "elements": []
+              "elements": [],
+              "syntaxType": "bar"
             }
           }
         ],
@@ -1693,7 +1706,8 @@
                   },
                   "value": 3
                 }
-              ]
+              ],
+              "syntaxType": "bar"
             }
           }
         ],
@@ -1835,7 +1849,8 @@
                       },
                       "value": 3
                     }
-                  ]
+                  ],
+                  "syntaxType": "bar"
                 },
                 {
                   "type": "NumericLiteral",
@@ -1857,7 +1872,8 @@
                   },
                   "value": 4
                 }
-              ]
+              ],
+              "syntaxType": "bar"
             }
           }
         ],
