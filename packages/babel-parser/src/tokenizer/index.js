@@ -392,9 +392,10 @@ export default class Tokenizer extends LocationParser {
 
     if (
       this.getPluginOption("recordAndTuple", "hash") &&
-      (next === 123 || next === 91)
+      (next === charCodes.leftCurlyBrace ||
+        next === charCodes.leftSquareBracket)
     ) {
-      if (next === 123) {
+      if (next === charCodes.leftCurlyBrace) {
         // #{
         this.finishToken(tt.braceHashL);
       } else {
