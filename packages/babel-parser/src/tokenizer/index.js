@@ -458,11 +458,11 @@ export default class Tokenizer extends LocationParser {
   readToken_interpreter(): boolean {
     if (this.state.pos !== 0 || this.length < 2) return false;
 
+    let ch = this.input.charCodeAt(this.state.pos + 1);
+    if (ch !== charCodes.exclamationMark) return false;
+
     const start = this.state.pos;
     this.state.pos += 1;
-
-    let ch = this.input.charCodeAt(this.state.pos);
-    if (ch !== charCodes.exclamationMark) return false;
 
     while (!isNewLine(ch) && ++this.state.pos < this.length) {
       ch = this.input.charCodeAt(this.state.pos);
