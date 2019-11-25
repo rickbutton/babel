@@ -345,6 +345,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       startPos: ?number,
       startLoc: ?Position,
       isPattern: boolean,
+      isRecord: boolean,
       refShorthandDefaultPos: ?Pos,
     ): ?N.ObjectProperty {
       const node: N.EstreeProperty = (super.parseObjectProperty(
@@ -352,6 +353,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         startPos,
         startLoc,
         isPattern,
+        isRecord,
         refShorthandDefaultPos,
       ): any);
 
